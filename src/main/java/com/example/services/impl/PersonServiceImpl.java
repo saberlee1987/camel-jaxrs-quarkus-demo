@@ -16,7 +16,7 @@ import javax.inject.Named;
 @Named(value = "personService")
 public class PersonServiceImpl implements PersonService {
     @Inject
-    private PersonRepository personRepository;
+    PersonRepository personRepository;
 
     @Override
     public PersonEntity addPerson(@Body PersonDto personDto) {

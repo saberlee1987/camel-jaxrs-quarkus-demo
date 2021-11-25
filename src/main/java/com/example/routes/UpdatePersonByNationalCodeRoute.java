@@ -3,16 +3,22 @@ package com.example.routes;
 import com.example.dto.PersonDto;
 import com.example.dto.PersonEntity;
 import com.example.dto.ServiceErrorResponse;
+import com.example.exceptions.ValidatorException;
+import com.example.services.InputValidator;
 import org.apache.camel.Exchange;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
 import org.apache.camel.model.rest.RestParamType;
-
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.core.MediaType;
 
 @Singleton
 public class UpdatePersonByNationalCodeRoute extends AbstractRestRouteBuilder {
+
+    @Inject
+    InputValidator validator;
+
     @Override
     public void configure() throws Exception {
         super.configure();
@@ -32,6 +38,13 @@ public class UpdatePersonByNationalCodeRoute extends AbstractRestRouteBuilder {
                 .routeId(Routes.UPDATE_PERSON_BY_NATIONAL_CODE_ROUTE)
                 .routeGroup(Routes.UPDATE_PERSON_BY_NATIONAL_CODE_GROUP)
                 .log("Request for Update Person By nationalCode nationalCode ${header.nationalCode} ====> ${body}")
+                .to("bean-validator://update-person-validator")
+                .process(exchange -> {
+                    String nationalCode = exchange.getIn().getHeader("nationalCode", String.class);
+                    if (!validator.validateNationalCode(nationalCode)){
+                        throw new ValidatorException("nationalCode","Please enter valid nationalCode");
+                    }
+                })
                 .to("bean:personService?method=updatePerson")
                 .marshal().json(JsonLibrary.Jackson)
                 .convertBodyTo(String.class)

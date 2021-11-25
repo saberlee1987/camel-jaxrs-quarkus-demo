@@ -3,22 +3,27 @@ package com.example.routes;
 import com.example.dto.ServiceErrorResponse;
 import com.example.dto.ServiceResponse;
 import com.example.exceptions.ResourceNotFoundException;
+import com.example.exceptions.ValidatorException;
+import com.example.services.InputValidator;
 import org.apache.camel.Exchange;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestParamType;
-
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.core.MediaType;
 
 @Singleton
 public class DeletePersonByNationalCodeRoute extends AbstractRestRouteBuilder{
 
+    @Inject
+    InputValidator validator;
+
     @Override
     public void configure() throws Exception {
         super.configure();
 
         rest("/persons")
-                .delete("/findByNationalCode/{nationalCode}")
+                .delete("/deleteByNationalCode/{nationalCode}")
                 .id(Routes.DELETE_BY_NATIONAL_CODE_ROUTE)
                 .description("Delete Person By NationalCode")
                 .produces(MediaType.APPLICATION_JSON)
@@ -30,6 +35,12 @@ public class DeletePersonByNationalCodeRoute extends AbstractRestRouteBuilder{
                 .routeId(Routes.DELETE_BY_NATIONAL_CODE_ROUTE)
                 .routeGroup(Routes.DELETE_BY_NATIONAL_CODE_GROUP)
                 .log("Request Delete Person By nationalCode ====> ${header.nationalCode}")
+                .process(exchange -> {
+                    String nationalCode = exchange.getIn().getHeader("nationalCode", String.class);
+                    if (!validator.validateNationalCode(nationalCode)){
+                        throw new ValidatorException("nationalCode","Please enter valid nationalCode");
+                    }
+                })
                 .to("bean:personService?method=deletePersonByNationalCode")
                 .convertBodyTo(String.class)
                 .marshal().json(JsonLibrary.Jackson)

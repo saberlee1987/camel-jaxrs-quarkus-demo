@@ -6,7 +6,6 @@ import com.example.dto.ServiceErrorResponse;
 import org.apache.camel.Exchange;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
-
 import javax.inject.Singleton;
 import javax.ws.rs.core.MediaType;
 
@@ -30,6 +29,7 @@ public class AddPersonRoute extends AbstractRestRouteBuilder {
                 .routeId(Routes.ADD_PERSON_ROUTE)
                 .routeGroup(Routes.ADD_PERSON_GROUP)
                 .log("Request for addPerson ====> ${body}")
+                .to("bean-validator://add-person-validator")
                 .to("bean:personService?method=addPerson")
                 .marshal().json(JsonLibrary.Jackson)
                 .convertBodyTo(String.class)
